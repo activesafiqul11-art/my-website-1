@@ -22,12 +22,40 @@ export const PRESET_IMAGES: Record<string, { label: string; src: string }> = {
   },
 };
 
+function detectBaseDirUrl(): string {
+  if (typeof window === 'undefined') return '/';
+  const { origin, pathname } = window.location;
+  const cleanedPath = pathname
+    .replace(/\/projects\/[^/]*\/?$/, '/')
+    .replace(/\/admin\/?$/, '/')
+    .replace(/\/index\.html$/, '/');
+  const dirPath = cleanedPath.endsWith('/') ? cleanedPath : `${cleanedPath}/`;
+  return `${origin}${dirPath}`;
+}
+
+const INITIAL_BASE_DIR_URL = detectBaseDirUrl();
+
+export function resolvePublicAsset(assetPath: string | undefined | null): string {
+  const raw = (assetPath || '').trim();
+  if (!raw) return '';
+  if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+  const trimmed = raw.replace(/^\/+/, '');
+  if (typeof window !== 'undefined') {
+    try {
+      return new URL(trimmed, INITIAL_BASE_DIR_URL).href;
+    } catch {
+      return `/${trimmed}`;
+    }
+  }
+  return `/${trimmed}`;
+}
+
 export function resolveMediaUrl(value: string | undefined | null): string {
   if (!value) return motionReelImg;
   if (value in PRESET_IMAGES) {
     return PRESET_IMAGES[value].src;
   }
-  return value;
+  return resolvePublicAsset(value);
 }
 
 export type ParsedVideo =

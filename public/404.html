@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting — Md. Safiqul Islam</title>
+    <script>
+      (function () {
+        var path = window.location.pathname || '/';
+        var search = window.location.search || '';
+        var segments = path.split('/').filter(Boolean);
+        var routeHash = '';
+        var baseSegments = segments.slice();
+
+        var projectsIdx = segments.indexOf('projects');
+        var adminIdx = segments.indexOf('admin');
+        if (projectsIdx !== -1) {
+          routeHash = '#/' + segments.slice(projectsIdx).join('/');
+          baseSegments = segments.slice(0, projectsIdx);
+        } else if (adminIdx !== -1) {
+          routeHash = '#/admin';
+          baseSegments = segments.slice(0, adminIdx);
+        }
+
+        var basePath = baseSegments.length ? '/' + baseSegments.join('/') + '/' : '/';
+        window.location.replace(basePath + search + routeHash);
+      })();
+    </script>
+  </head>
+  <body style="background-color:#09090B;color:#F4F4F0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;">
+    <p style="font-size:13px;color:#A1A1AA;">Redirecting to portfolio...</p>
+  </body>
+</html>

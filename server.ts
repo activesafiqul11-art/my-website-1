@@ -416,6 +416,7 @@ async function startServer() {
 
   if (isProd) {
     const distPath = path.resolve(process.cwd(), 'dist');
+    app.use('/projects/assets', express.static(path.join(distPath, 'assets')));
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

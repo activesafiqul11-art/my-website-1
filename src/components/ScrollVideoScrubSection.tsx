@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { resolveMediaUrl } from '../lib/media';
+import { resolveMediaUrl, resolvePublicAsset } from '../lib/media';
 import { SectionHeading } from './TypographyEffects';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -21,6 +21,7 @@ export function ScrollVideoScrubSection({
   const [scrubPercent, setScrubPercent] = useState(0);
   const [videoFailed, setVideoFailed] = useState(false);
 
+  const resolvedVideoUrl = resolvePublicAsset(videoUrl);
   const posterSrc = resolveMediaUrl(posterImage);
 
   useEffect(() => {
@@ -91,10 +92,10 @@ export function ScrollVideoScrubSection({
             ref={frameRef}
             className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/15 bg-[#09090B] shadow-2xl will-change-transform"
           >
-            {videoUrl && !videoFailed ? (
+            {resolvedVideoUrl && !videoFailed ? (
               <video
                 ref={videoRef}
-                src={videoUrl}
+                src={resolvedVideoUrl}
                 poster={posterSrc}
                 muted
                 playsInline

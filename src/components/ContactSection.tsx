@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { ArrowUpRight, Check, Mail, MapPin, Phone } from 'lucide-react';
-import { submitContactInquiry } from '../lib/api';
+import { isStaticHostMode, submitContactInquiry } from '../lib/api';
 import { contactSubmissionSchema } from '../lib/validation';
 import type { PortfolioProfile } from '../types/portfolio';
 import { MagneticButton } from './MagneticButton';
@@ -20,10 +20,12 @@ export function ContactSection({ profile }: ContactSectionProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [mailtoFallback, setMailtoFallback] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setMailtoFallback(null);
 
     const parsed = contactSubmissionSchema.safeParse({
       name,
@@ -37,6 +39,19 @@ export function ContactSection({ profile }: ContactSectionProps) {
       return;
     }
 
+    const buildMailto = () =>
+      `mailto:${encodeURIComponent(profile.email)}?subject=${encodeURIComponent(
+        parsed.data.subject,
+      )}&body=${encodeURIComponent(
+        `Name: ${parsed.data.name}\nEmail: ${parsed.data.email}\n\n${parsed.data.message}`,
+      )}`;
+
+    if (isStaticHostMode()) {
+      setMailtoFallback(buildMailto());
+      setError('Static hosting detected. Use the button below to send directly via your email app.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await submitContactInquiry(parsed.data);
@@ -47,6 +62,9 @@ export function ContactSection({ profile }: ContactSectionProps) {
       setMessage('');
       setWebsite('');
     } catch (err) {
+      if (isStaticHostMode()) {
+        setMailtoFallback(buildMailto());
+      }
       setError(err instanceof Error ? err.message : 'Unable to send message.');
     } finally {
       setSubmitting(false);
@@ -225,9 +243,18 @@ export function ContactSection({ profile }: ContactSectionProps) {
                   {error && (
                     <div
                       role="alert"
-                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-xs text-red-300"
+                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-200 space-y-2"
                     >
-                      {error}
+                      <p>{error}</p>
+                      {mailtoFallback && (
+                        <a
+                          href={mailtoFallback}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-[#E5A93C] px-3 py-1.5 font-semibold text-[#09090B] hover:bg-[#ebb655] transition-colors"
+                        >
+                          <span>Open in Email App</span>
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </a>
+                      )}
                     </div>
                   )}
 

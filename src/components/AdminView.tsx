@@ -80,6 +80,7 @@ const EMPTY_PROJECT: Omit<PortfolioProject, 'id' | 'createdAt'> = {
 export function AdminView({ portfolio, onPortfolioUpdated, onExitAdmin }: AdminViewProps) {
   const [checkingSession, setCheckingSession] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const [staticHost, setStaticHost] = useState(false);
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -132,6 +133,7 @@ export function AdminView({ portfolio, onPortfolioUpdated, onExitAdmin }: AdminV
       .then((res) => {
         if (!active) return;
         setAuthenticated(Boolean(res.authenticated));
+        setStaticHost(Boolean(res.staticHost));
       })
       .catch(() => {
         if (active) setAuthenticated(false);
@@ -366,6 +368,12 @@ export function AdminView({ portfolio, onPortfolioUpdated, onExitAdmin }: AdminV
               <span>Portfolio</span>
             </button>
           </div>
+
+          {staticHost && (
+            <div className="mb-5 rounded-lg border border-[#E5A93C]/30 bg-[#E5A93C]/10 px-3.5 py-2.5 text-xs text-[#E5A93C]">
+              Static hosting preview detected. Admin authentication and database saves require the Node.js server (`npm start`).
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

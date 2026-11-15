@@ -10,6 +10,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { resolvePublicAsset } from '../lib/media';
 import { ResilientImage } from './ResilientImage';
 
 interface HeroSceneR3FProps {
@@ -231,7 +232,7 @@ function HeroSceneContent({
   useEffect(() => {
     let active = true;
     const loader = new TTFLoader();
-    loader.load('/assets/display-bold.ttf', (json) => {
+    loader.load(resolvePublicAsset('/assets/display-bold.ttf'), (json) => {
       if (!active) return;
       setFont(new Font(json));
     });

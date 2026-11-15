@@ -5,6 +5,7 @@ import type { PortfolioProject } from '../types/portfolio';
 import { parseVideoSource } from '../lib/media';
 import { AnimatedProgressBar } from './NumberEffects';
 import { MagneticButton } from './MagneticButton';
+import { ErrorBoundary } from './ErrorBoundary';
 import { ResilientImage } from './ResilientImage';
 
 const ProjectMockup3D = lazy(() => import('./ProjectMockup3D'));
@@ -149,7 +150,7 @@ export function ProjectDetailPage({ project, onBack }: ProjectDetailPageProps) {
             </div>
           </div>
 
-          <Suspense
+          <ErrorBoundary
             fallback={
               <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
                 <ResilientImage
@@ -160,14 +161,26 @@ export function ProjectDetailPage({ project, onBack }: ProjectDetailPageProps) {
               </div>
             }
           >
-            <ProjectMockup3D
-              imageUrl={project.coverImage}
-              title={project.title}
-              mockupType={mockupMode}
-              exploded={exploded}
-              assembleKey={assembleKey}
-            />
-          </Suspense>
+            <Suspense
+              fallback={
+                <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
+                  <ResilientImage
+                    src={project.coverImage}
+                    alt={project.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              }
+            >
+              <ProjectMockup3D
+                imageUrl={project.coverImage}
+                title={project.title}
+                mockupType={mockupMode}
+                exploded={exploded}
+                assembleKey={assembleKey}
+              />
+            </Suspense>
+          </ErrorBoundary>
         </section>
 
         {/* Optional Video Embed */}

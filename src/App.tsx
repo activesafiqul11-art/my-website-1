@@ -4,8 +4,9 @@ import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight, RotateCcw } from 'lucide-react';
-import { fetchPublicPortfolio } from './lib/api';
+import { fetchPublicPortfolio, isStaticHostMode } from './lib/api';
 import type { PortfolioProject, ProjectCategory, PublicPortfolioData } from './types/portfolio';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { CustomCursor } from './components/CustomCursor';
 import { MagneticButton } from './components/MagneticButton';
 import {
@@ -35,14 +36,19 @@ const FILTER_OPTIONS: ('All' | ProjectCategory)[] = [
   'Social & Marketing',
 ];
 
-function parseRoute(pathname: string): {
+function parseRoute(pathname: string, hash = ''): {
   mode: 'home' | 'admin' | 'project';
   projectId: string | null;
 } {
-  if (pathname.startsWith('/admin')) {
+  const hashRoute = hash.replace(/^#/, '');
+  if (hashRoute.startsWith('/admin') || pathname.endsWith('/admin') || pathname === '/admin') {
     return { mode: 'admin', projectId: null };
   }
-  const projMatch = pathname.match(/^\/projects\/([^/]+)/);
+  const hashProj = hashRoute.match(/^\/projects\/([^/]+)/);
+  if (hashProj?.[1]) {
+    return { mode: 'project', projectId: decodeURIComponent(hashProj[1]) };
+  }
+  const projMatch = pathname.match(/\/projects\/([^/]+)/);
   if (projMatch?.[1]) {
     return { mode: 'project', projectId: decodeURIComponent(projMatch[1]) };
   }
@@ -52,7 +58,7 @@ function parseRoute(pathname: string): {
 export default function App() {
   const [route, setRoute] = useState(() =>
     typeof window !== 'undefined'
-      ? parseRoute(window.location.pathname)
+      ? parseRoute(window.location.pathname, window.location.hash)
       : { mode: 'home' as const, projectId: null },
   );
 
@@ -66,11 +72,15 @@ export default function App() {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    const onPopState = () => {
-      setRoute(parseRoute(window.location.pathname));
+    const onRouteChange = () => {
+      setRoute(parseRoute(window.location.pathname, window.location.hash));
     };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
+    window.addEventListener('popstate', onRouteChange);
+    window.addEventListener('hashchange', onRouteChange);
+    return () => {
+      window.removeEventListener('popstate', onRouteChange);
+      window.removeEventListener('hashchange', onRouteChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -130,10 +140,18 @@ export default function App() {
   }, [route.mode, loading]);
 
   function navigateTo(path: string) {
-    if (window.location.pathname !== path) {
-      window.history.pushState({}, '', path);
+    if (isStaticHostMode()) {
+      const nextHash = path === '/' ? '#/' : `#${path}`;
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash;
+      }
+      setRoute(parseRoute(window.location.pathname, nextHash));
+    } else {
+      if (window.location.pathname !== path || window.location.hash) {
+        window.history.pushState({}, '', path);
+      }
+      setRoute(parseRoute(path, ''));
     }
-    setRoute(parseRoute(path));
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
@@ -309,21 +327,41 @@ export default function App() {
 
                     {/* Lazy-Loaded R3F 3D Scene */}
                     <div className="lg:col-span-7 min-h-[380px] sm:min-h-[450px] lg:min-h-[500px]">
-                      <Suspense
+                      <ErrorBoundary
                         fallback={
-                          <div className="h-full w-full rounded-2xl border border-white/10 bg-[#111115] flex items-center justify-center">
-                            <span className="font-mono text-xs text-[#A1A1AA]">
-                              Initializing 3D studio stage...
-                            </span>
+                          <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0D0D10]">
+                            <ResilientImage
+                              src={profile.scrubVideoPoster}
+                              alt={profile.hero3DWordmark}
+                              fallbackTitle={profile.hero3DWordmark}
+                              className="h-full w-full object-cover opacity-85"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-transparent to-transparent" />
+                            <div className="absolute bottom-5 left-5">
+                              <div className="text-xs font-mono text-[#E5A93C]">3D STUDIO REEL</div>
+                              <div className="font-display text-2xl font-semibold text-[#F4F4F0]">
+                                {profile.hero3DWordmark}
+                              </div>
+                            </div>
                           </div>
                         }
                       >
-                        <HeroSceneR3F
-                          wordmark={profile.hero3DWordmark}
-                          scrollProgress={globalScrollProgress}
-                          fallbackImage={profile.scrubVideoPoster}
-                        />
-                      </Suspense>
+                        <Suspense
+                          fallback={
+                            <div className="h-full w-full rounded-2xl border border-white/10 bg-[#111115] flex items-center justify-center">
+                              <span className="font-mono text-xs text-[#A1A1AA]">
+                                Initializing 3D studio stage...
+                              </span>
+                            </div>
+                          }
+                        >
+                          <HeroSceneR3F
+                            wordmark={profile.hero3DWordmark}
+                            scrollProgress={globalScrollProgress}
+                            fallbackImage={profile.scrubVideoPoster}
+                          />
+                        </Suspense>
+                      </ErrorBoundary>
                     </div>
                   </div>
 
@@ -677,7 +715,7 @@ export default function App() {
                     Contact
                   </a>
                   <a
-                    href="/admin"
+                    href={isStaticHostMode() ? '#/admin' : '/admin'}
                     onClick={(e) => {
                       e.preventDefault();
                       navigateTo('/admin');
