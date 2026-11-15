@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background-color: #09090b;
+    color: #f4f4f0;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+.var-weight-hover {
+  font-weight: 450;
+  font-variation-settings: 'wght' 450;
+  transition:
+    font-weight 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    font-variation-settings 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 180ms ease;
+}
+
+.var-weight-hover:hover,
+.var-weight-hover:focus-visible {
+  font-weight: 760;
+  font-variation-settings: 'wght' 760;
+}
+
+.var-heading-hover {
+  font-variation-settings: 'wght' 550;
+  transition:
+    font-variation-settings 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    font-weight 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.var-heading-hover:hover {
+  font-variation-settings: 'wght' 780;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .var-weight-hover,
+  .var-heading-hover {
+    transition: none;
+  }
+}
