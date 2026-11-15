@@ -149,28 +149,32 @@ function PostProcessingEffects({ enabled }: { enabled: boolean }) {
 
   const composer = useMemo(() => {
     if (!enabled) return null;
-    const comp = new EffectComposer(gl);
-    comp.addPass(new RenderPass(scene, camera));
+    try {
+      const comp = new EffectComposer(gl);
+      comp.addPass(new RenderPass(scene, camera));
 
-    const bloom = new UnrealBloomPass(
-      new THREE.Vector2(size.width, size.height),
-      0.26,
-      0.45,
-      0.85,
-    );
-    comp.addPass(bloom);
+      const bloom = new UnrealBloomPass(
+        new THREE.Vector2(size.width, size.height),
+        0.26,
+        0.45,
+        0.85,
+      );
+      comp.addPass(bloom);
 
-    const bokeh = new BokehPass(scene, camera, {
-      focus: 6.2,
-      aperture: 0.00018,
-      maxblur: 0.0035,
-    });
-    comp.addPass(bokeh);
+      const bokeh = new BokehPass(scene, camera, {
+        focus: 6.2,
+        aperture: 0.00018,
+        maxblur: 0.0035,
+      });
+      comp.addPass(bokeh);
 
-    const noise = new ShaderPass(SubtleNoiseShader);
-    comp.addPass(noise);
+      const noise = new ShaderPass(SubtleNoiseShader);
+      comp.addPass(noise);
 
-    return { comp, noise };
+      return { comp, noise };
+    } catch {
+      return null;
+    }
   }, [enabled, gl, scene, camera]);
 
   useEffect(() => {
